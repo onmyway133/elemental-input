@@ -1,6 +1,8 @@
 # elemental-input
 
-> Animated effect text field for React. Type magic words to trigger **fire**, **water**, **ice**, and 10 more live particle effects.
+Animated effect text field for React. Type magic words to trigger **fire**, **water**, **ice**, and 10 more live particle effects.
+
+![](images/banner.png)
 
 ## Install
 
