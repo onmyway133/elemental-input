@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>EffectTextField — Example</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & tokens ──────────────────────────────────────────────────────── */
+:root {
+  --bg:      #0e0d0c;
+  --bg2:     #171513;
+  --fg:      #efe7dc;
+  --fg-dim:  #8a7f73;
+  --accent:  #e9a36a;
+  --rule:    #2a2522;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg); color: var(--fg);
+  height: 100%; overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+header .title { color: var(--fg); }
+header .title b { color: var(--accent); font-weight: 500; }
+
+.chips { display: inline-flex; flex-wrap: wrap; gap: 5px; }
+.chip {
+  padding: 2px 7px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font-size: 10px;
+  color: var(--fg);
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: border-color 150ms, background 150ms;
+}
+.chip:hover { border-color: var(--accent); background: rgba(233,163,106,0.08); }
+
+.stage { flex: 1; position: relative; overflow: hidden; }
+
+footer {
+  flex-shrink: 0;
+  padding: 10px 28px;
+  border-top: 1px solid var(--rule);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+footer kbd {
+  font-family: inherit;
+  color: var(--fg);
+  padding: 1px 6px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  background: var(--bg2);
+  margin: 0 2px;
+}
+
+/* ── EffectTextField ─────────────────────────────────────────────────────── */
+
+.etf-root {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: clamp(22px, 3.2vw, 56px);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  cursor: text;
+}
+
+/* Both share identical typography so text wraps identically */
+.etf-mirror,
+.etf-textarea {
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  padding: 5vh 7vw 80px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  tab-size: 4;
+}
+
+.etf-mirror {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;  /* scrollTop synced via JS */
+  color: var(--fg);
+  z-index: 1;
+}
+
+.etf-textarea {
+  position: relative;
+  display: block;
+  color: transparent;
+  background: transparent;
+  caret-color: var(--accent);
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: auto;
+  z-index: 2;
+}
+.etf-textarea::selection {
+  background: rgba(233, 163, 106, 0.3);
+  color: transparent;
+}
+
+.etf-placeholder { color: #3a3530; }
+
+/* ── Effect word ─────────────────────────────────────────────────────────── */
+.etf-word {
+  position: relative;
+  display: inline-block;
+  transition: transform 120ms cubic-bezier(.2,.8,.2,1), filter 200ms;
+  will-change: transform;
+  vertical-align: baseline;
+}
+.etf-layer {
+  position: absolute;
+  inset: -30% -15% -30% -15%;
+  pointer-events: none;
+  z-index: 2;
+}
+.etf-layer canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  mix-blend-mode: screen;
+}
+.etf-text { position: relative; z-index: 3; }
+
+/* ── Effect styles ───────────────────────────────────────────────────────── */
+
+/* fire */
+.etf-word[data-fx="fire"] .etf-text {
+  background: linear-gradient(180deg,#fff6c8 0%,#ffb347 35%,#ff5a1f 70%,#b8200a 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 10px rgba(255,120,40,.55)) drop-shadow(0 0 24px rgba(255,80,20,.35));
+  animation: etf-fireWobble 2.6s ease-in-out infinite;
+}
+@keyframes etf-fireWobble {
+  0%,100% { transform: translateY(0) skewX(0); }
+  50%      { transform: translateY(-1px) skewX(-1deg); }
+}
+
+/* smoke */
+.etf-word[data-fx="smoke"] .etf-text {
+  color: #d9d4cd;
+  filter: blur(.3px) drop-shadow(0 4px 10px rgba(180,180,180,.15));
+  opacity: .9;
+  animation: etf-smokeSway 5s ease-in-out infinite;
+}
+@keyframes etf-smokeSway {
+  0%,100% { letter-spacing: -.01em; }
+  50%      { letter-spacing: .01em; }
+}
+
+/* metal */
+.etf-word[data-fx="metal"] .etf-text {
+  background: linear-gradient(180deg,#fefefe 0%,#c9ced6 18%,#7d8592 38%,#e9edf2 52%,#6f7684 68%,#b6bcc7 82%,#f6f7fa 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.5));
+  background-size: 100% 200%;
+  animation: etf-metalShift 6s ease-in-out infinite;
+}
+@keyframes etf-metalShift {
+  0%,100% { background-position: 0% 0%; }
+  50%      { background-position: 0% 100%; }
+}
+
+/* wind */
+.etf-word[data-fx="wind"] .etf-text {
+  color: #cfe3ea; font-style: italic;
+  animation: etf-windBlow 3.4s ease-in-out infinite;
+  text-shadow: 2px 0 0 rgba(207,227,234,.3), 6px 0 8px rgba(207,227,234,.15);
+}
+@keyframes etf-windBlow {
+  0%,100% { transform: translateX(0) skewX(-4deg); }
+  50%      { transform: translateX(3px) skewX(-8deg); }
+}
+
+/* water */
+.etf-word[data-fx="water"] .etf-text {
+  background: linear-gradient(180deg,#a8d8ff,#3b82c9 60%,#1e3a6b);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 6px rgba(59,130,201,.35));
+  animation: etf-waterShimmer 3s ease-in-out infinite;
+}
+@keyframes etf-waterShimmer {
+  0%,100% { filter: drop-shadow(0 2px 6px rgba(59,130,201,.35)); }
+  50%      { filter: drop-shadow(0 2px 14px rgba(100,180,255,.6)); }
+}
+
+/* ice */
+.etf-word[data-fx="ice"] .etf-text {
+  background: linear-gradient(180deg,#eaf7ff,#b8dcff 40%,#6ea6d6);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 6px rgba(184,220,255,.6));
+  letter-spacing: .01em;
+  animation: etf-iceFlicker 4s ease-in-out infinite;
+}
+@keyframes etf-iceFlicker {
+  0%,100% { filter: drop-shadow(0 0 6px rgba(184,220,255,.6)); }
+  50%      { filter: drop-shadow(0 0 12px rgba(200,240,255,.9)); }
+}
+
+/* shadow */
+.etf-word[data-fx="shadow"] .etf-text {
+  color: #0a0909;
+  text-shadow: 0 0 1px rgba(200,200,200,.15), 0 0 12px rgba(0,0,0,.9), 0 0 30px rgba(0,0,0,.7);
+  -webkit-text-stroke: 1px rgba(230,230,230,.2);
+}
+
+/* gold */
+.etf-word[data-fx="gold"] .etf-text {
+  background: linear-gradient(180deg,#fff0a8 0%,#f5c542 35%,#b8860b 70%,#6b4a0a 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.4)) drop-shadow(0 0 14px rgba(255,200,80,.4));
+  animation: etf-goldPulse 3.5s ease-in-out infinite;
+}
+@keyframes etf-goldPulse {
+  0%,100% { filter: drop-shadow(0 1px 0 rgba(0,0,0,.4)) drop-shadow(0 0 14px rgba(255,200,80,.4)); }
+  50%      { filter: drop-shadow(0 1px 0 rgba(0,0,0,.4)) drop-shadow(0 0 28px rgba(255,220,100,.7)); }
+}
+
+/* electric */
+.etf-word[data-fx="electric"] .etf-text {
+  color: #eaf6ff;
+  text-shadow: 0 0 4px #a5e3ff, 0 0 12px #4fb3ff, 0 0 28px #1b6bff;
+  animation: etf-zap .18s steps(2) infinite;
+}
+@keyframes etf-zap {
+  0%,100% { transform: translate(0,0); }
+  50%      { transform: translate(.5px,-.5px); }
+}
+
+/* neon */
+.etf-word[data-fx="neon"] .etf-text {
+  color: #e0d0ff;
+  text-shadow: 0 0 6px #c77dff, 0 0 14px #a020f0, 0 0 32px #6a00f4;
+  animation: etf-neonFlicker .8s steps(3) infinite;
+}
+@keyframes etf-neonFlicker {
+  0%   { opacity: 1; }   5%  { opacity: .88; }
+  10%  { opacity: 1; }  60%  { opacity: 1; }
+  65%  { opacity: .85; } 70% { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+/* blood */
+.etf-word[data-fx="blood"] .etf-text {
+  background: linear-gradient(180deg,#ff6060 0%,#cc1111 45%,#7a0000 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 8px rgba(180,0,0,.6)) drop-shadow(0 2px 4px rgba(0,0,0,.8));
+  animation: etf-bloodDrip 4s ease-in-out infinite;
+}
+@keyframes etf-bloodDrip {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(1px); }
+}
+
+/* void */
+.etf-word[data-fx="void"] .etf-text {
+  background: linear-gradient(180deg,#3d0060,#1a0030 50%,#000000);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 8px rgba(120,0,180,.5)) drop-shadow(0 0 20px rgba(60,0,100,.4));
+  animation: etf-voidPulse 5s ease-in-out infinite;
+}
+@keyframes etf-voidPulse {
+  0%,100% { filter: drop-shadow(0 0 8px rgba(120,0,180,.5)) drop-shadow(0 0 20px rgba(60,0,100,.4)); }
+  50%      { filter: drop-shadow(0 0 16px rgba(160,0,240,.8)) drop-shadow(0 0 40px rgba(80,0,140,.6)); }
+}
+
+/* aurora */
+.etf-word[data-fx="aurora"] .etf-text {
+  background: linear-gradient(90deg,#00ffaa,#00cfff 33%,#aa66ff 66%,#00ffaa);
+  background-size: 200% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 10px rgba(0,220,180,.5));
+  animation: etf-auroraShift 4s linear infinite;
+}
+@keyframes etf-auroraShift {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
+
+/* ── Custom-map panel ────────────────────────────────────────────────────── */
+.map-panel {
+  position: fixed;
+  bottom: 52px;
+  right: 20px;
+  width: 300px;
+  background: rgba(23,21,19,.95);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 11px;
+  color: var(--fg-dim);
+  backdrop-filter: blur(8px);
+  z-index: 60;
+  display: none;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.map-panel.open { display: block; }
+.map-panel h3 {
+  margin: 0 0 10px;
+  font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--fg); font-weight: 500;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.map-panel h3 b { color: var(--accent); font-weight: 500; }
+.map-row {
+  display: flex; align-items: center; gap: 8px;
+  margin: 6px 0;
+}
+.map-row input[type="text"] {
+  flex: 1; background: var(--bg); border: 1px solid var(--rule);
+  border-radius: 4px; color: var(--fg); padding: 4px 8px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  outline: none;
+}
+.map-row input[type="text"]:focus { border-color: var(--accent); }
+.map-row select {
+  flex: 1; background: var(--bg); border: 1px solid var(--rule);
+  border-radius: 4px; color: var(--fg); padding: 4px 6px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  outline: none; cursor: pointer;
+}
+.map-row .del-btn {
+  background: none; border: 1px solid var(--rule); border-radius: 4px;
+  color: var(--fg-dim); cursor: pointer; padding: 3px 7px; font-size: 11px;
+  transition: border-color 150ms, color 150ms;
+}
+.map-row .del-btn:hover { border-color: #cc4444; color: #cc4444; }
+.add-btn {
+  width: 100%; margin-top: 8px; padding: 6px;
+  background: none; border: 1px solid var(--rule); border-radius: 4px;
+  color: var(--fg-dim); font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  cursor: pointer; transition: border-color 150ms, color 150ms;
+}
+.add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* map toggle button */
+.map-toggle {
+  background: none; border: 1px solid var(--rule); border-radius: 5px;
+  color: var(--fg-dim); font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  padding: 4px 10px; cursor: pointer;
+  transition: border-color 150ms, color 150ms;
+}
+.map-toggle:hover, .map-toggle.active { border-color: var(--accent); color: var(--accent); }
+
+/* cursor ring */
+.cursor-ring {
+  position: fixed; pointer-events: none;
+  border: 1px solid rgba(233,163,106,.22); border-radius: 50%;
+  transform: translate(-50%,-50%); z-index: 40;
+  transition: width 200ms, height 200ms, opacity 200ms;
+  opacity: 0;
+}
+.cursor-ring.active { opacity: 1; }
+.cursor-dot {
+  position: fixed; width: 4px; height: 4px;
+  background: var(--accent); border-radius: 50%;
+  transform: translate(-50%,-50%); pointer-events: none;
+  z-index: 41; opacity: 0; transition: opacity 150ms;
+}
+.cursor-dot.active { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title">EFFECT TEXT FIELD <b>·</b> EXAMPLE</div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="chips" id="chipList"></div>
+      <button class="map-toggle" id="mapToggle">WORD MAP</button>
+    </div>
+  </header>
+
+  <div class="stage">
+    <div class="etf-root" id="etfRoot">
+      <div class="etf-mirror" id="mirror"></div>
+      <textarea class="etf-textarea" id="textarea" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+    </div>
+  </div>
+
+  <footer>
+    <div>type freely · trigger words render live</div>
+    <div>drag cursor over words · hold <kbd>⇧</kbd> for stronger field</div>
+  </footer>
+</div>
+
+<!-- Custom word-map panel -->
+<div class="map-panel" id="mapPanel">
+  <h3>WORD MAP <b>●</b>
+    <span style="color:var(--fg-dim);font-size:9px;letter-spacing:.05em">word → effect</span>
+  </h3>
+  <div id="mapRows"></div>
+  <button class="add-btn" id="addRowBtn">+ ADD MAPPING</button>
+</div>
+
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="cursor-dot"  id="cursorDot"></div>
+
+<script>
+// ── All available effects ───────────────────────────────────────────────────
+const ALL_EFFECTS = [
+  'fire','smoke','metal','wind','water','ice',
+  'shadow','gold','electric','neon','blood','void','aurora'
+];
+
+// ── Default word → effect map ───────────────────────────────────────────────
+let WORD_MAP = {
+  fire:'fire', smoke:'smoke', metal:'metal', wind:'wind',
+  water:'water', ice:'ice', shadow:'shadow', gold:'gold', electric:'electric',
+  neon:'neon', blood:'blood', void:'void', aurora:'aurora',
+};
+
+const SAMPLE = `The blacksmith fed the fire another breath of wind, and the metal in the furnace answered with a low hum. Smoke curled up through the rafters.
+
+Outside, the ice on the pond caught the morning's first gold. The river below was black water that remembered every storm. Somewhere beyond the ridge, an electric storm was practicing — distant shadow stitched to shadow, the sky threading itself with thin white wire.
+
+A neon sign flickered in the void. Blood on the pavement caught the aurora's light.`;
+
+// ── DOM refs ────────────────────────────────────────────────────────────────
+const root      = document.getElementById('etfRoot');
+const mirror    = document.getElementById('mirror');
+const textarea  = document.getElementById('textarea');
+const chipList  = document.getElementById('chipList');
+const mapPanel  = document.getElementById('mapPanel');
+const mapRows   = document.getElementById('mapRows');
+const mapToggle = document.getElementById('mapToggle');
+const addRowBtn = document.getElementById('addRowBtn');
+const cursorRing = document.getElementById('cursorRing');
+const cursorDot  = document.getElementById('cursorDot');
+
+// ── Particle state ──────────────────────────────────────────────────────────
+let emitters = [];  // { el, canvas, ctx, fx, particles, w, h, rect }
+
+// ── Text parsing ────────────────────────────────────────────────────────────
+function buildRegex() {
+  const words = Object.keys(WORD_MAP);
+  if (!words.length) return null;
+  const escaped = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
+  return new RegExp(`\\b(${escaped.join('|')})\\b`, 'gi');
+}
+
+function renderMirror(text) {
+  const re = buildRegex();
+  if (!text) { mirror.innerHTML = ''; return; }
+  if (!re) { mirror.textContent = text; return; }
+
+  // Build HTML safely — split on matched effect words
+  const parts = [];
+  let last = 0;
+  text.replace(re, (m, _g, idx) => {
+    if (idx > last) parts.push({ t: text.slice(last, idx), fx: null });
+    parts.push({ t: m, fx: WORD_MAP[m.toLowerCase()] });
+    last = idx + m.length;
+    return m;
+  });
+  if (last < text.length) parts.push({ t: text.slice(last), fx: null });
+
+  // Build DOM (avoid innerHTML for security)
+  mirror.innerHTML = '';
+  for (const p of parts) {
+    if (!p.fx) {
+      mirror.appendChild(document.createTextNode(p.t));
+    } else {
+      const word = document.createElement('span');
+      word.className = 'etf-word';
+      word.dataset.fx = p.fx;
+
+      const layer = document.createElement('span');
+      layer.className = 'etf-layer';
+      const canvas = document.createElement('canvas');
+      layer.appendChild(canvas);
+
+      const tx = document.createElement('span');
+      tx.className = 'etf-text';
+      tx.textContent = p.t;
+
+      word.appendChild(layer);
+      word.appendChild(tx);
+      mirror.appendChild(word);
+    }
+  }
+}
+
+// ── Attach canvas emitters ──────────────────────────────────────────────────
+function attachEmitters() {
+  emitters = [];
+  mirror.querySelectorAll('.etf-word').forEach(el => {
+    const canvas = el.querySelector('canvas');
+    const layer  = el.querySelector('.etf-layer');
+    if (!canvas || !layer) return;
+    const fx   = el.dataset.fx;
+    const rect = layer.getBoundingClientRect();
+    const dpr  = Math.min(2, devicePixelRatio || 1);
+    canvas.width  = Math.max(20, rect.width * dpr);
+    canvas.height = Math.max(20, rect.height * dpr);
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    emitters.push({ el, canvas, ctx, fx, particles:[], w:rect.width, h:rect.height, rect });
+  });
+}
+
+function refreshRects() {
+  for (const e of emitters) {
+    const layer = e.el.querySelector('.etf-layer');
+    if (!layer) continue;
+    const rect = layer.getBoundingClientRect();
+    const dpr  = Math.min(2, devicePixelRatio || 1);
+    if (Math.abs(rect.width - e.w) > .5 || Math.abs(rect.height - e.h) > .5) {
+      e.canvas.width  = Math.max(20, rect.width * dpr);
+      e.canvas.height = Math.max(20, rect.height * dpr);
+      e.ctx.setTransform(dpr,0,0,dpr,0,0);
+      e.w = rect.width; e.h = rect.height;
+    }
+    e.rect = rect;
+  }
+}
+
+// ── Particle factory ────────────────────────────────────────────────────────
+function newParticle(fx, w, h) {
+  const r = Math.random;
+  switch (fx) {
+    case 'fire':     return { x:w*(.15+r()*.7), y:h*.78, vx:(r()-.5)*.4, vy:-.8-r()*1.2, life:0, max:40+r()*30, size:6+r()*10 };
+    case 'smoke':    return { x:w*(.15+r()*.7), y:h*.5,  vx:(r()-.5)*.3, vy:-.4-r()*.6,  life:0, max:80+r()*60, size:10+r()*14 };
+    case 'metal':    return { x:w*r(),           y:h*(.2+r()*.6), vx:0, vy:0, life:0, max:20+r()*15, size:1+r()*2 };
+    case 'wind':     return { x:-10, y:h*(.2+r()*.6), vx:3+r()*4, vy:(r()-.5)*.4, life:0, max:60+r()*30, size:.6+r()*.8, len:20+r()*40 };
+    case 'water':    return { x:w*r(), y:h*.3+r()*h*.2, vx:(r()-.5)*.5, vy:.6+r()*1, life:0, max:50+r()*20, size:1.2+r()*1.6 };
+    case 'ice':      return { x:w*r(), y:h*(.3+r()*.5), vx:(r()-.5)*.2, vy:-.1+r()*.2, life:0, max:40+r()*30, size:1.5+r()*2 };
+    case 'shadow':   return { x:w*r(), y:h*(.2+r()*.6), vx:(r()-.5)*.3, vy:(r()-.5)*.3, life:0, max:70+r()*40, size:8+r()*14 };
+    case 'gold':     return { x:w*r(), y:h*r(), vx:(r()-.5)*.2, vy:(r()-.5)*.2, life:0, max:60+r()*40, size:1.2+r()*1.8 };
+    case 'electric': return { x:w*(.1+r()*.8), y:h*(.2+r()*.6), vx:0, vy:0, life:0, max:5+r()*6, size:1+r()*2, tx:w*r(), ty:h*(.2+r()*.6) };
+    case 'neon':     return { x:w*r(), y:h*(.1+r()*.8), vx:(r()-.5)*.15, vy:(r()-.5)*.15, life:0, max:30+r()*20, size:1+r()*2 };
+    case 'blood':    return { x:w*(.2+r()*.6), y:h*.7, vx:(r()-.5)*.5, vy:.8+r()*1.4, life:0, max:40+r()*20, size:1.5+r()*2.5 };
+    case 'void':     return { x:w*r(), y:h*r(), vx:0, vy:0, life:0, max:50+r()*40, size:2+r()*4 };
+    case 'aurora':   return { x:w*r(), y:h*(.1+r()*.5), vx:(r()-.5)*.4, vy:(r()-.5)*.2, life:0, max:80+r()*60, size:4+r()*8 };
+    default:         return { x:w*r(), y:h*r(), vx:0, vy:0, life:0, max:30, size:3 };
+  }
+}
+
+const SPAWN_RATE = { fire:3,smoke:1.6,metal:.4,wind:2,water:1.5,ice:.6,shadow:.6,gold:.8,electric:1.2,neon:1,blood:1.8,void:.5,aurora:1 };
+const DENSITY = 0.3;
+
+function emitParticles(e, dt) {
+  const spawn = (SPAWN_RATE[e.fx]||1) * DENSITY * dt * 60;
+  for (let i = 0; i < spawn; i++) {
+    if (Math.random() > spawn - Math.floor(spawn) && i === Math.floor(spawn)) break;
+    e.particles.push(newParticle(e.fx, e.w, e.h));
+  }
+}
+
+const ADDITIVE = new Set(['fire','electric','gold','metal','ice','neon','aurora']);
+
+function drawParticles(e, dt) {
+  const { ctx, particles, w, h, fx } = e;
+  ctx.clearRect(0, 0, w, h);
+  ctx.globalCompositeOperation = ADDITIVE.has(fx) ? 'lighter' : 'source-over';
+
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.life += dt * 60;
+    if (p.life >= p.max) { particles.splice(i,1); continue; }
+    p.x += p.vx; p.y += p.vy;
+    const t = p.life / p.max;
+
+    switch (fx) {
+      case 'fire': {
+        p.vy -= .02; p.vx += (Math.random()-.5)*.06;
+        const hue = 30 - t*20, a = (1-t)*.7, s = p.size*(1-t*.6);
+        const g = ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,s);
+        g.addColorStop(0,`hsla(${hue},100%,70%,${a})`);
+        g.addColorStop(.5,`hsla(${hue-10},100%,50%,${a*.5})`);
+        g.addColorStop(1,`hsla(${hue-20},100%,40%,0)`);
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,s,0,Math.PI*2); ctx.fill(); break;
+      }
+      case 'smoke': {
+        p.vx+=(Math.random()-.5)*.04; p.vy-=.002;
+        const a=(t<.2?t/.2:1-t)*.25, s=p.size*(1+t*1.2);
+        const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,s);
+        g.addColorStop(0,`rgba(200,200,200,${a})`); g.addColorStop(1,'rgba(200,200,200,0)');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,s,0,Math.PI*2); ctx.fill(); break;
+      }
+      case 'metal': {
+        const a=(1-Math.abs(t*2-1))*.9;
+        ctx.fillStyle=`rgba(255,255,255,${a})`; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle=`rgba(255,255,255,${a*.6})`; ctx.lineWidth=.6; ctx.beginPath();
+        ctx.moveTo(p.x-p.size*3,p.y); ctx.lineTo(p.x+p.size*3,p.y);
+        ctx.moveTo(p.x,p.y-p.size*3); ctx.lineTo(p.x,p.y+p.size*3); ctx.stroke(); break;
+      }
+      case 'wind': {
+        const a=(1-Math.abs(t*2-1))*.5;
+        ctx.strokeStyle=`rgba(207,227,234,${a})`; ctx.lineWidth=p.size;
+        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-(p.len||30),p.y-p.vy*2); ctx.stroke();
+        if (p.x > w+40) { particles.splice(i,1); continue; } break;
+      }
+      case 'water': {
+        p.vy+=.04; const a=(1-t)*.8;
+        ctx.fillStyle=`rgba(140,200,255,${a})`; ctx.beginPath();
+        ctx.ellipse(p.x,p.y,p.size*.6,p.size*1.1,0,0,Math.PI*2); ctx.fill();
+        if (p.y>h-2) {
+          ctx.strokeStyle=`rgba(140,200,255,${a*.6})`; ctx.lineWidth=.5;
+          ctx.beginPath(); ctx.arc(p.x,h-2,p.size*2,0,Math.PI,true); ctx.stroke();
+          particles.splice(i,1); continue;
+        } break;
+      }
+      case 'ice': {
+        const a=(1-Math.abs(t*2-1))*.9;
+        ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.life*.02);
+        ctx.strokeStyle=`rgba(220,240,255,${a})`; ctx.lineWidth=.7;
+        for (let k=0;k<3;k++) { ctx.rotate(Math.PI/3); ctx.beginPath(); ctx.moveTo(-p.size*2,0); ctx.lineTo(p.size*2,0); ctx.stroke(); }
+        ctx.restore(); break;
+      }
+      case 'shadow': {
+        p.vx+=(Math.random()-.5)*.05; p.vy+=(Math.random()-.5)*.05;
+        const a=(t<.2?t/.2:1-t)*.55, s=p.size*(1+t*.6);
+        const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,s);
+        g.addColorStop(0,`rgba(0,0,0,${a})`); g.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.globalCompositeOperation='source-over'; ctx.fillStyle=g;
+        ctx.beginPath(); ctx.arc(p.x,p.y,s,0,Math.PI*2); ctx.fill(); break;
+      }
+      case 'gold': {
+        const a=(1-Math.abs(t*2-1))*.9;
+        ctx.fillStyle=`rgba(255,220,120,${a})`; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); break;
+      }
+      case 'electric': {
+        const a=(1-t)*.9;
+        ctx.strokeStyle=`rgba(180,220,255,${a})`; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(p.x,p.y);
+        for (let s=1;s<=6;s++) {
+          ctx.lineTo(p.x+(p.tx-p.x)*(s/6)+(Math.random()-.5)*6, p.y+(p.ty-p.y)*(s/6)+(Math.random()-.5)*6);
+        }
+        ctx.stroke(); break;
+      }
+      case 'neon': {
+        const a=(1-Math.abs(t*2-1))*.85, hue=260+(p.x/w)*120;
+        const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.size*2);
+        g.addColorStop(0,`hsla(${hue},100%,75%,${a})`); g.addColorStop(1,`hsla(${hue},100%,60%,0)`);
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,p.size*2,0,Math.PI*2); ctx.fill(); break;
+      }
+      case 'blood': {
+        p.vy+=.06; const a=(1-t)*.9;
+        ctx.fillStyle=`rgba(180,20,20,${a})`;
+        ctx.beginPath(); ctx.ellipse(p.x,p.y,p.size*.5,p.size,0,0,Math.PI*2); ctx.fill();
+        if (p.y>h) { particles.splice(i,1); continue; } break;
+      }
+      case 'void': {
+        p.vx+=(Math.random()-.5)*.02; p.vy+=(Math.random()-.5)*.02;
+        const a=(1-Math.abs(t*2-1))*.5, s=p.size*(1-t*.3);
+        ctx.globalCompositeOperation='source-over';
+        const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,s*3);
+        g.addColorStop(0,`rgba(60,0,90,${a})`); g.addColorStop(.5,`rgba(20,0,40,${a*.6})`); g.addColorStop(1,'rgba(0,0,0,0)');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,s*3,0,Math.PI*2); ctx.fill(); break;
+      }
+      case 'aurora': {
+        p.vx+=(Math.random()-.5)*.03;
+        const a=(t<.3?t/.3:1-t)*.4, s=p.size*(1+t*.5), hue=120+(p.x/w)*140;
+        const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,s);
+        g.addColorStop(0,`hsla(${hue},80%,65%,${a})`); g.addColorStop(1,`hsla(${hue+30},80%,55%,0)`);
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,s,0,Math.PI*2); ctx.fill(); break;
+      }
+    }
+  }
+}
+
+// ── Animation loop ──────────────────────────────────────────────────────────
+let lastT = performance.now();
+
+function tick(now) {
+  const dt = Math.min(.05, (now - lastT) / 1000);
+  lastT = now;
+  for (const e of emitters) {
+    if (e.rect.bottom < 0 || e.rect.top > innerHeight) continue;
+    emitParticles(e, dt);
+    drawParticles(e, dt);
+  }
+  applyForceField();
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// ── Force field ─────────────────────────────────────────────────────────────
+const RADIUS = 310, STRENGTH = 90;
+const mouse = { x:-9999, y:-9999, down:false, shift:false, active:false };
+let lastMove = 0;
+
+window.addEventListener('mousemove', ev => {
+  mouse.x = ev.clientX; mouse.y = ev.clientY;
+  mouse.active = true; lastMove = performance.now();
+  updateCursorRing();
+});
+window.addEventListener('mousedown', () => { mouse.down = true; updateCursorRing(); });
+window.addEventListener('mouseup',   () => { mouse.down = false; updateCursorRing(); });
+window.addEventListener('keydown', e => { mouse.shift = e.shiftKey; updateCursorRing(); });
+window.addEventListener('keyup',   e => { mouse.shift = e.shiftKey; updateCursorRing(); });
+setInterval(() => { if (performance.now() - lastMove > 1500) { mouse.active = false; updateCursorRing(); } }, 300);
+
+function updateCursorRing() {
+  const r = RADIUS * (mouse.shift?1.8:1) * (mouse.down?1.3:1);
+  cursorRing.style.left = mouse.x+'px'; cursorRing.style.top = mouse.y+'px';
+  cursorDot.style.left  = mouse.x+'px'; cursorDot.style.top  = mouse.y+'px';
+  cursorRing.style.width = r*2+'px'; cursorRing.style.height = r*2+'px';
+  if (mouse.active) { cursorRing.classList.add('active'); cursorDot.classList.add('active'); }
+  else              { cursorRing.classList.remove('active'); cursorDot.classList.remove('active'); }
+}
+
+function applyForceField() {
+  const { x:mx, y:my, shift, down, active } = mouse;
+  const r   = RADIUS   * (shift?1.8:1) * (down?1.3:1);
+  const str = STRENGTH * (shift?1.8:1) * (down?1.4:1);
+  for (const e of emitters) {
+    const b = e.el.getBoundingClientRect();
+    const cx = b.left + b.width/2, cy = b.top + b.height/2;
+    const dx = cx-mx, dy = cy-my, dist = Math.hypot(dx,dy);
+    if (dist < r && active) {
+      const falloff = 1 - dist/r, f = falloff*falloff;
+      const ang = Math.atan2(dy,dx);
+      e.el.style.transform = `translate(${Math.cos(ang)*str*f}px,${Math.sin(ang)*str*f}px) rotate(${(dx>0?1:-1)*falloff*4}deg)`;
+      e.el.style.filter = `blur(${falloff*.3}px)`;
+    } else {
+      e.el.style.transform = '';
+      e.el.style.filter = '';
+    }
+  }
+}
+
+// ── Textarea input & mirror sync ────────────────────────────────────────────
+textarea.addEventListener('input', () => {
+  renderMirror(textarea.value);
+  attachEmitters();
+});
+
+textarea.addEventListener('scroll', () => {
+  mirror.scrollTop = textarea.scrollTop;
+});
+
+window.addEventListener('resize', refreshRects);
+
+// ── Chip list ────────────────────────────────────────────────────────────────
+function buildChips() {
+  chipList.innerHTML = '';
+  ALL_EFFECTS.forEach(fx => {
+    const chip = document.createElement('span');
+    chip.className = 'chip';
+    chip.textContent = fx;
+    // clicking a chip inserts the word into the textarea at cursor
+    chip.addEventListener('click', () => {
+      const start = textarea.selectionStart;
+      const end   = textarea.selectionEnd;
+      const val   = textarea.value;
+      const insert = (start > 0 && val[start-1] !== ' ' && val[start-1] !== '\n' ? ' ' : '') + fx + ' ';
+      textarea.value = val.slice(0, start) + insert + val.slice(end);
+      textarea.selectionStart = textarea.selectionEnd = start + insert.length;
+      textarea.focus();
+      renderMirror(textarea.value);
+      attachEmitters();
+    });
+    chipList.appendChild(chip);
+  });
+}
+buildChips();
+
+// ── Word map panel ───────────────────────────────────────────────────────────
+function selectOptions(selected) {
+  return ALL_EFFECTS.map(fx => `<option value="${fx}"${fx===selected?' selected':''}>${fx}</option>`).join('');
+}
+
+function renderMapRows() {
+  mapRows.innerHTML = '';
+  Object.entries(WORD_MAP).forEach(([word, fx]) => {
+    const row = document.createElement('div');
+    row.className = 'map-row';
+
+    const wordInput = document.createElement('input');
+    wordInput.type = 'text'; wordInput.value = word; wordInput.placeholder = 'word';
+    wordInput.addEventListener('change', () => {
+      const newWord = wordInput.value.trim().toLowerCase();
+      if (!newWord || newWord === word) return;
+      delete WORD_MAP[word];
+      WORD_MAP[newWord] = fx;
+      renderMirror(textarea.value); attachEmitters();
+    });
+
+    const sel = document.createElement('select');
+    sel.innerHTML = selectOptions(fx);
+    sel.addEventListener('change', () => {
+      WORD_MAP[word] = sel.value;
+      renderMirror(textarea.value); attachEmitters();
+    });
+
+    const del = document.createElement('button');
+    del.className = 'del-btn'; del.textContent = '✕';
+    del.addEventListener('click', () => {
+      delete WORD_MAP[word];
+      renderMapRows();
+      renderMirror(textarea.value); attachEmitters();
+    });
+
+    row.appendChild(wordInput); row.appendChild(sel); row.appendChild(del);
+    mapRows.appendChild(row);
+  });
+}
+
+addRowBtn.addEventListener('click', () => {
+  let newWord = 'word';
+  let n = 1;
+  while (WORD_MAP[newWord]) newWord = 'word' + (n++);
+  WORD_MAP[newWord] = 'fire';
+  renderMapRows();
+  renderMirror(textarea.value); attachEmitters();
+  // focus the new word input
+  const inputs = mapRows.querySelectorAll('input');
+  inputs[inputs.length-1]?.focus();
+  inputs[inputs.length-1]?.select();
+});
+
+mapToggle.addEventListener('click', () => {
+  const open = mapPanel.classList.toggle('open');
+  mapToggle.classList.toggle('active', open);
+  if (open) renderMapRows();
+});
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+textarea.value = SAMPLE;
+renderMirror(SAMPLE);
+attachEmitters();
+document.fonts?.ready.then(() => { attachEmitters(); });
+setTimeout(attachEmitters, 400);
+</script>
+</body>
+</html>

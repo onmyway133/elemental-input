@@ -1,0 +1,306 @@
+/* ─── Root container ─────────────────────────────────────────────────────── */
+
+.etf-root {
+  position: relative;
+  overflow: hidden;
+  background: #0e0d0c;
+  color: #efe7dc;
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: clamp(22px, 3.2vw, 56px);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  cursor: text;
+  border-radius: 8px;
+}
+
+/* ─── Shared typography base (applied to both mirror and textarea) ────────── */
+
+.etf-mirror,
+.etf-textarea {
+  font: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  padding: 32px 40px;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  tab-size: 4;
+}
+
+/* ─── Mirror ──────────────────────────────────────────────────────────────── */
+
+.etf-mirror {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden; /* scrollTop is synced via JS */
+  color: #efe7dc;
+  /* Extra bottom padding so the last line of particles isn't cut off */
+  padding-bottom: 80px;
+  z-index: 1;
+}
+
+/* ─── Textarea (transparent — only the caret is visible) ─────────────────── */
+
+.etf-textarea {
+  position: relative;
+  display: block;
+  color: transparent;
+  background: transparent;
+  caret-color: #e9a36a;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: auto;
+  z-index: 2;
+  /* Must match mirror padding-bottom exactly so scrolling stays aligned */
+  padding-bottom: 80px;
+  /* Selection highlight: show only the accent tint */
+}
+
+.etf-textarea::selection {
+  background: rgba(233, 163, 106, 0.35);
+  color: transparent;
+}
+
+.etf-placeholder {
+  color: #4a4540;
+}
+
+/* ─── Effect word wrapper ─────────────────────────────────────────────────── */
+
+.etf-word {
+  position: relative;
+  display: inline-block;
+  transition: transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 200ms;
+  will-change: transform;
+  vertical-align: baseline;
+}
+
+/* Canvas layer — extends beyond the word so particles can spill out */
+.etf-layer {
+  position: absolute;
+  inset: -30% -15% -30% -15%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.etf-layer canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: screen;
+}
+
+/* The visible text inside an effect word */
+.etf-text {
+  position: relative;
+  z-index: 3;
+}
+
+/* ─── Effect: fire ───────────────────────────────────────────────────────── */
+
+.etf-word[data-fx='fire'] .etf-text {
+  background: linear-gradient(180deg, #fff6c8 0%, #ffb347 35%, #ff5a1f 70%, #b8200a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 10px rgba(255, 120, 40, 0.55))
+          drop-shadow(0 0 24px rgba(255, 80, 20, 0.35));
+  animation: etf-fireWobble 2.6s ease-in-out infinite;
+}
+@keyframes etf-fireWobble {
+  0%, 100% { transform: translateY(0) skewX(0); }
+  50%       { transform: translateY(-1px) skewX(-1deg); }
+}
+
+/* ─── Effect: smoke ─────────────────────────────────────────────────────── */
+
+.etf-word[data-fx='smoke'] .etf-text {
+  color: #d9d4cd;
+  filter: blur(0.3px) drop-shadow(0 4px 10px rgba(180, 180, 180, 0.15));
+  opacity: 0.9;
+  animation: etf-smokeSway 5s ease-in-out infinite;
+}
+@keyframes etf-smokeSway {
+  0%, 100% { letter-spacing: -0.01em; }
+  50%       { letter-spacing: 0.01em; }
+}
+
+/* ─── Effect: metal ─────────────────────────────────────────────────────── */
+
+.etf-word[data-fx='metal'] .etf-text {
+  background: linear-gradient(
+    180deg,
+    #fefefe 0%, #c9ced6 18%, #7d8592 38%,
+    #e9edf2 52%, #6f7684 68%, #b6bcc7 82%, #f6f7fa 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5));
+  background-size: 100% 200%;
+  animation: etf-metalShift 6s ease-in-out infinite;
+}
+@keyframes etf-metalShift {
+  0%, 100% { background-position: 0% 0%; }
+  50%       { background-position: 0% 100%; }
+}
+
+/* ─── Effect: wind ──────────────────────────────────────────────────────── */
+
+.etf-word[data-fx='wind'] .etf-text {
+  color: #cfe3ea;
+  font-style: italic;
+  animation: etf-windBlow 3.4s ease-in-out infinite;
+  text-shadow: 2px 0 0 rgba(207, 227, 234, 0.3), 6px 0 8px rgba(207, 227, 234, 0.15);
+}
+@keyframes etf-windBlow {
+  0%, 100% { transform: translateX(0) skewX(-4deg); }
+  50%       { transform: translateX(3px) skewX(-8deg); }
+}
+
+/* ─── Effect: water ─────────────────────────────────────────────────────── */
+
+.etf-word[data-fx='water'] .etf-text {
+  background: linear-gradient(180deg, #a8d8ff, #3b82c9 60%, #1e3a6b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 6px rgba(59, 130, 201, 0.35));
+  animation: etf-waterShimmer 3s ease-in-out infinite;
+}
+@keyframes etf-waterShimmer {
+  0%, 100% { filter: drop-shadow(0 2px 6px rgba(59, 130, 201, 0.35)); }
+  50%       { filter: drop-shadow(0 2px 14px rgba(100, 180, 255, 0.6)); }
+}
+
+/* ─── Effect: ice ───────────────────────────────────────────────────────── */
+
+.etf-word[data-fx='ice'] .etf-text {
+  background: linear-gradient(180deg, #eaf7ff, #b8dcff 40%, #6ea6d6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 6px rgba(184, 220, 255, 0.6));
+  letter-spacing: 0.01em;
+  animation: etf-iceFlicker 4s ease-in-out infinite;
+}
+@keyframes etf-iceFlicker {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(184, 220, 255, 0.6)); }
+  50%       { filter: drop-shadow(0 0 12px rgba(200, 240, 255, 0.9)); }
+}
+
+/* ─── Effect: shadow ────────────────────────────────────────────────────── */
+
+.etf-word[data-fx='shadow'] .etf-text {
+  color: #0a0909;
+  text-shadow:
+    0 0 1px rgba(200, 200, 200, 0.15),
+    0 0 12px rgba(0, 0, 0, 0.9),
+    0 0 30px rgba(0, 0, 0, 0.7);
+  -webkit-text-stroke: 1px rgba(230, 230, 230, 0.2);
+}
+
+/* ─── Effect: gold ──────────────────────────────────────────────────────── */
+
+.etf-word[data-fx='gold'] .etf-text {
+  background: linear-gradient(180deg, #fff0a8 0%, #f5c542 35%, #b8860b 70%, #6b4a0a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4))
+          drop-shadow(0 0 14px rgba(255, 200, 80, 0.4));
+  animation: etf-goldPulse 3.5s ease-in-out infinite;
+}
+@keyframes etf-goldPulse {
+  0%, 100% { filter: drop-shadow(0 1px 0 rgba(0,0,0,0.4)) drop-shadow(0 0 14px rgba(255,200,80,0.4)); }
+  50%       { filter: drop-shadow(0 1px 0 rgba(0,0,0,0.4)) drop-shadow(0 0 28px rgba(255,220,100,0.7)); }
+}
+
+/* ─── Effect: electric ──────────────────────────────────────────────────── */
+
+.etf-word[data-fx='electric'] .etf-text {
+  color: #eaf6ff;
+  text-shadow:
+    0 0 4px #a5e3ff,
+    0 0 12px #4fb3ff,
+    0 0 28px #1b6bff;
+  animation: etf-zap 0.18s steps(2) infinite;
+}
+@keyframes etf-zap {
+  0%, 100% { transform: translate(0, 0); }
+  50%       { transform: translate(0.5px, -0.5px); }
+}
+
+/* ─── Effect: neon ──────────────────────────────────────────────────────── */
+
+.etf-word[data-fx='neon'] .etf-text {
+  color: #e0d0ff;
+  text-shadow:
+    0 0 6px #c77dff,
+    0 0 14px #a020f0,
+    0 0 32px #6a00f4;
+  animation: etf-neonFlicker 0.8s steps(3) infinite;
+}
+@keyframes etf-neonFlicker {
+  0%   { opacity: 1; }
+  5%   { opacity: 0.88; }
+  10%  { opacity: 1; }
+  60%  { opacity: 1; }
+  65%  { opacity: 0.85; }
+  70%  { opacity: 1; }
+  100% { opacity: 1; }
+}
+
+/* ─── Effect: blood ─────────────────────────────────────────────────────── */
+
+.etf-word[data-fx='blood'] .etf-text {
+  background: linear-gradient(180deg, #ff6060 0%, #cc1111 45%, #7a0000 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 8px rgba(180, 0, 0, 0.6))
+          drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+  animation: etf-bloodDrip 4s ease-in-out infinite;
+}
+@keyframes etf-bloodDrip {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(1px); }
+}
+
+/* ─── Effect: void ──────────────────────────────────────────────────────── */
+
+.etf-word[data-fx='void'] .etf-text {
+  background: linear-gradient(180deg, #3d0060, #1a0030 50%, #000000);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 8px rgba(120, 0, 180, 0.5))
+          drop-shadow(0 0 20px rgba(60, 0, 100, 0.4));
+  animation: etf-voidPulse 5s ease-in-out infinite;
+}
+@keyframes etf-voidPulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(120,0,180,0.5)) drop-shadow(0 0 20px rgba(60,0,100,0.4)); }
+  50%       { filter: drop-shadow(0 0 16px rgba(160,0,240,0.8)) drop-shadow(0 0 40px rgba(80,0,140,0.6)); }
+}
+
+/* ─── Effect: aurora ────────────────────────────────────────────────────── */
+
+.etf-word[data-fx='aurora'] .etf-text {
+  background: linear-gradient(90deg, #00ffaa, #00cfff 33%, #aa66ff 66%, #00ffaa);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 10px rgba(0, 220, 180, 0.5));
+  animation: etf-auroraShift 4s linear infinite;
+}
+@keyframes etf-auroraShift {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 200% 0%; }
+}
