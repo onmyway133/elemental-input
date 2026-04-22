@@ -1,8 +1,15 @@
 {
   "name": "elemental-input",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Animated effect text field React component — type magic words to trigger fire, water, ice and more",
-  "keywords": ["react", "text-field", "animation", "particles", "effects", "canvas"],
+  "keywords": [
+    "react",
+    "text-field",
+    "animation",
+    "particles",
+    "effects",
+    "canvas"
+  ],
   "author": "Khoa Pham <onmyway133@gmail.com>",
   "license": "MIT",
   "repository": {
@@ -10,7 +17,9 @@
     "url": "https://github.com/onmyway133/elemental-input"
   },
   "homepage": "https://github.com/onmyway133/elemental-input#readme",
-  "sideEffects": ["**/*.css"],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -22,7 +31,10 @@
     },
     "./style.css": "./dist/index.css"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
