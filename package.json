@@ -16,25 +16,26 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types":   "./dist/index.d.ts",
-      "import":  "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
     "./style.css": "./dist/index.css"
   },
   "files": ["dist", "README.md"],
   "scripts": {
-    "build": "rm -rf dist && bun build src/index.ts --outdir dist --format esm --external react --external react-dom --sourcemap && bun build src/index.ts --outdir dist/cjs-tmp --format cjs --external react --external react-dom --sourcemap && mv dist/cjs-tmp/index.js dist/index.cjs && rm -rf dist/cjs-tmp && tsc --emitDeclarationOnly --outDir dist",
-    "dev":   "bun build src/index.ts --outdir dist --format esm --external react --external react-dom --sourcemap --watch",
+    "build": "tsup",
+    "dev": "tsup --watch",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "react":     ">=17.0.0",
+    "react": ">=17.0.0",
     "react-dom": ">=17.0.0"
   },
   "devDependencies": {
-    "@types/react":     "^18.0.0",
+    "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
-"typescript":       "^5.0.0"
+    "tsup": "^8.5.1",
+    "typescript": "^5.0.0"
   }
 }
