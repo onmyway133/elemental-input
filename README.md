@@ -99,10 +99,6 @@ Then use it in your mapping:
 <EffectTextField wordEffects={{ magic: 'rainbow' }} />
 ```
 
-## How typing works
-
-The component uses a `<textarea>` + transparent mirror `<div>` approach — no `contenteditable` — so cursor behaviour is completely native. No jumping, no jitter, no line-wrap surprises.
-
 ## License
 
 MIT © [Khoa Pham](mailto:onmyway133@gmail.com)
