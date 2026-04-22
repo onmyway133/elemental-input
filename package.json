@@ -1,6 +1,6 @@
 {
   "name": "elemental-input",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Animated effect text field React component — type magic words to trigger fire, water, ice and more",
   "keywords": ["react", "text-field", "animation", "particles", "effects", "canvas"],
   "author": "Khoa Pham <onmyway133@gmail.com>",
@@ -24,8 +24,8 @@
   },
   "files": ["dist", "README.md"],
   "scripts": {
-    "build": "tsup",
-    "dev":   "tsup --watch",
+    "build": "rm -rf dist && bun build src/index.ts --outdir dist --format esm --external react --external react-dom --sourcemap && bun build src/index.ts --outdir dist/cjs-tmp --format cjs --external react --external react-dom --sourcemap && mv dist/cjs-tmp/index.js dist/index.cjs && rm -rf dist/cjs-tmp && tsc --emitDeclarationOnly --outDir dist",
+    "dev":   "bun build src/index.ts --outdir dist --format esm --external react --external react-dom --sourcemap --watch",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
@@ -35,7 +35,6 @@
   "devDependencies": {
     "@types/react":     "^18.0.0",
     "@types/react-dom": "^18.0.0",
-    "tsup":             "^8.0.0",
-    "typescript":       "^5.0.0"
+"typescript":       "^5.0.0"
   }
 }
